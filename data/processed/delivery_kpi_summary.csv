@@ -1,0 +1,9 @@
+metric,value
+total_orders,43739.0
+avg_delivery_time,124.91
+median_delivery_time,125.0
+avg_distance_km,38.56
+avg_pickup_delay_mins,9.96
+slow_delivery_threshold,160.0
+slow_delivery_rate,23.05
+distance_issue_records,188.0
