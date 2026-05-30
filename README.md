@@ -1,317 +1,259 @@
-# Delivery Operations Analysis for Logistics Optimization
+# Delivery Operations Analytics: Last-Mile Delivery Performance & Slow-Delivery Analysis
 
 ## Project Overview
 
-Efficient delivery operations are critical for customer satisfaction in logistics and e-commerce systems. Delays in order fulfillment can impact service quality, increase operational costs, and reduce customer retention.
+This project analyzes last-mile delivery operations data to understand delivery time patterns, slow-delivery risk groups, and operational factors that may affect delivery performance.
 
-This project analyzes delivery performance using operational data from over **43,000 delivery records** to identify key factors influencing delays and operational inefficiencies.
+The main goal of this project is not to build an advanced machine learning model.
+The focus is on practical data analyst work such as data cleaning, KPI creation, exploratory analysis, SQL validation, Excel checks, and Power BI dashboard preparation.
 
-The analysis focuses on delivery timelines, pickup efficiency, traffic impact, weather conditions, vehicle performance, and peak demand periods to uncover actionable operational insights.
+This project is suitable for understanding how traffic, distance, pickup delay, vehicle type, weather, area, and agent rating groups relate to delivery performance.
 
 ---
 
 ## Business Problem
 
-Delivery systems frequently experience delays caused by multiple operational factors such as:
+Delivery teams need to monitor where delivery time increases and which operational groups show higher slow-delivery risk.
 
-* Traffic congestion
-* Dispatch inefficiencies
-* Vehicle allocation mismatch
-* Demand surges during peak hours
-* External environmental conditions
+In this project, I tried to answer questions such as:
 
-The objective of this project is to analyze these operational variables and identify opportunities to improve delivery efficiency.
-
----
-
-## Project Objectives
-
-The main goals of this analysis were to:
-
-* Measure delivery performance using operational KPIs
-* Identify the primary drivers of delivery delays
-* Analyze pickup process efficiency
-* Evaluate vehicle-wise delivery performance
-* Detect demand peak hours
-* Generate operational recommendations for optimization
+* What is the average delivery time?
+* How many deliveries fall into slow-delivery risk?
+* Does traffic affect delivery performance?
+* How does delivery distance relate to delivery time?
+* Are there small vehicle groups that should not be over-interpreted?
+* Which records should be excluded from distance-based analysis?
+* How can the cleaned data be prepared for dashboard reporting?
 
 ---
 
-## Dataset Information
+## Dataset Summary
 
-**Dataset:** Amazon Delivery Dataset
+The dataset contains delivery order-level records with information such as order time, pickup time, traffic, weather, vehicle type, area, category, agent rating, store location, drop location, and delivery time.
 
-**Total Raw Records:** 43,739
+### Key Metrics
 
-**Final Cleaned Records:** 43,648
-
-**Features:** 21 (after feature engineering)
-
-### Key Attributes
-
-* Order details
-* Delivery agent information
-* Pickup and delivery timestamps
-* Traffic conditions
-* Weather conditions
-* Vehicle type
-* Delivery area
-* Delivery completion time
-* Product category
-* Geographical coordinates
+| Metric                           |          Value |
+| -------------------------------- | -------------: |
+| Total Orders                     |         43,739 |
+| Average Delivery Time            | 124.91 minutes |
+| Median Delivery Time             |    125 minutes |
+| Average Distance - Clean Records |        9.73 km |
+| Average Pickup Delay             |   9.96 minutes |
+| Slow-Delivery Threshold          |    160 minutes |
+| Slow-Delivery Rate               |         23.05% |
+| Distance Issue Records           |            188 |
 
 ---
 
-## Tools & Technologies Used
-
-### Programming & Analysis
+## Tools Used
 
 * Python
 * Pandas
 * NumPy
-
-### Data Visualization
-
 * Matplotlib
 * Seaborn
-
-### Database Analysis
-
-* MySQL
-
-### Dashboarding
-
+* PostgreSQL
+* Excel
 * Power BI
-
-### Supporting Tool
-
-* Excel (initial inspection only)
 
 ---
 
 ## Project Workflow
 
-### 1. Data Cleaning & Preparation
+### 1. Data Understanding
 
-Performed:
+I first reviewed the dataset structure, column names, data types, missing values, duplicate records, and basic summary statistics.
 
-* Missing value handling
-* Duplicate checks
-* Timestamp format correction
-* Midnight crossover correction
-* Categorical value standardization
-
-### Data Quality Challenge Solved
-
-The dataset contained time values stored in non-standard dot-separated format.
-
-Example:
-
-11.30.00
-
-This required explicit parsing and correction.
-
-Additionally, some pickup timestamps crossed midnight, which produced negative delays.
-
-These were corrected by applying 24-hour rollover adjustment.
+This helped me understand which fields needed cleaning before analysis.
 
 ---
 
-### 2. Feature Engineering
+### 2. Data Cleaning
 
-Created analytical features including:
+The cleaning process included:
 
-* Pickup Delay
-* Distance (km)
-* Delivery Hour
-* Time Slot Classification
-* Delay Flag
+* standardizing column names
+* cleaning text columns such as traffic, weather, vehicle, area, and category
+* converting numeric fields into proper formats
+* handling invalid agent ratings
+* checking duplicate rows
+* identifying missing or invalid pickup delay values
 
-These features enabled deeper operational analysis.
-
----
-
-### 3. Exploratory Data Analysis
-
-Conducted analysis on:
-
-* Delivery time distribution
-* Traffic impact
-* Weather influence
-* Vehicle performance
-* Area-wise comparison
-* Peak delivery hours
-* Correlation between operational metrics
+I avoided unnecessary deletion of records unless they were clearly unsuitable for a specific analysis.
 
 ---
 
-### 4. SQL-Based Business Analysis
+### 3. Feature Engineering
 
-Designed business-focused SQL queries to analyze:
+I created additional features to make the data more useful for operations analysis:
 
-* Delivery KPIs
-* Delay patterns
-* Traffic severity ranking
-* Vehicle performance comparison
-* Demand peak periods
+* `order_hour`
+* `order_day`
+* `is_weekend`
+* `pickup_delay_mins`
+* `distance_km`
+* `distance_issue_flag`
+* `distance_category`
+* `peak_hour_flag`
+* `rating_group`
+* `slow_delivery_flag`
 
-Included advanced window function analysis for traffic delay ranking.
-
----
-
-### 5. Interactive Dashboard Development
-
-Built a 2-page Power BI dashboard for:
-
-* Executive KPI monitoring
-* Operational diagnostics
-* Delay pattern exploration
+The distance was calculated using the Haversine formula based on store and drop coordinates.
 
 ---
 
-## Key Project Metrics
+## Important Assumptions
 
-| KPI                     | Value       |
-| ----------------------- | ----------- |
-| Total Orders            | 43,648      |
-| Average Delivery Time   | 124.91 mins |
-| Average Pickup Delay    | 9.99 mins   |
-| Average Distance        | 27.47 km    |
-| Delay Percentage        | 23.07%      |
-| Peak Order Hour         | 9 PM        |
-| Best Performing Vehicle | Van         |
-| Highest Delay Condition | Traffic Jam |
+The dataset does not include promised delivery time or official SLA target.
+
+Because of that, `slow_delivery_flag` is created as a proxy metric.
+Orders above the 75th percentile of delivery time are treated as slow-delivery cases.
+
+The slow-delivery threshold used in this project is:
+
+```text
+160 minutes
+```
+
+This should not be treated as an actual company-defined delay metric.
+
+Also, `distance_km` is straight-line distance calculated from latitude and longitude. It is not actual road distance.
+
+Records with suspicious distance values were flagged using `distance_issue_flag`.
+A total of 188 records were marked as distance issue records and excluded from distance-based analysis.
+
+---
+
+## Analysis Performed
+
+The project includes analysis on:
+
+* delivery time distribution
+* traffic-level delivery performance
+* distance category performance
+* traffic and distance slow-delivery risk
+* pickup delay relationship with delivery time
+* hourly order volume
+* peak-hour vs non-peak-hour performance
+* vehicle-level performance
+* rating-group performance
+* data quality checks
+* SQL validation checks
+* Excel KPI validation
+* Power BI dashboard summary
 
 ---
 
 ## Key Insights
 
-### Traffic Congestion is the Largest Delay Driver
+1. The dataset contains 43,739 delivery records, with an average delivery time of 124.91 minutes.
 
-Orders delivered during traffic jam conditions recorded the highest average delivery times.
+2. The median delivery time is 125 minutes, which is close to the average delivery time.
 
-This indicates that traffic-aware routing strategies can significantly improve performance.
+3. Around 23.05% of orders were marked as slow-delivery cases using the proxy threshold of 160 minutes.
 
----
+4. The average pickup delay is 9.96 minutes, so pickup delay is useful as a supporting operational metric.
 
-### Operational Delays Begin Early
+5. After excluding suspicious distance records, the average delivery distance is 9.73 km.
 
-Average pickup delay was approximately **10 minutes**, suggesting that dispatch-stage inefficiencies contribute to downstream delivery delays.
+6. 188 records were flagged as distance issue records and excluded from distance-based analysis.
 
----
+7. Traffic and distance-based analysis can help identify operational groups with higher slow-delivery risk.
 
-### Peak Demand Occurs at Night
-
-Order volume peaks at **9 PM**, highlighting the need for better evening resource allocation.
+8. Vehicle groups with very low record counts should not be over-interpreted.
 
 ---
 
-### Vehicle Performance Differs by Operational Context
+## Recommendations
 
-Van-based deliveries showed the best average completion performance across observed delivery conditions.
+1. Monitor high-traffic and longer-distance delivery groups separately because these groups may have higher slow-delivery risk.
 
----
+2. Track slow-delivery rate along with average delivery time instead of relying only on one metric.
 
-### Delay Risk is Operationally Significant
+3. Keep distance issue records flagged separately so that distance-based analysis remains transparent.
 
-Approximately **23% of deliveries** exceeded the delay threshold.
+4. Use pickup delay as a supporting metric, but avoid treating it as the only reason for longer delivery times.
 
-This suggests measurable room for operational optimization.
+5. Review small vehicle groups carefully before making conclusions because low record counts can give misleading results.
 
----
-
-## Business Recommendations
-
-### Optimize Fleet Allocation During Peak Hours
-
-Increase active delivery resources between **8 PM – 10 PM**.
+6. Use the dashboard summary output for regular monitoring of traffic, distance, vehicle, area, and rating-level performance.
 
 ---
 
-### Implement Traffic-Aware Dispatch Logic
+## SQL Validation
 
-Use congestion-based routing to reduce delivery completion times.
+PostgreSQL queries were added to validate the analysis from a database point of view.
 
----
+The SQL file includes checks for:
 
-### Reduce Pickup Delay
+* overall delivery KPIs
+* traffic performance
+* distance category performance
+* peak-hour performance
+* vehicle performance
+* rating group performance
+* area-level ranking
+* weather and category performance
+* slow-delivery flag validation
+* distance issue percentage check
 
-Target pickup readiness under **8 minutes**.
-
----
-
-### Vehicle Assignment Optimization
-
-Use vans strategically for longer-distance delivery clusters.
-
----
-
-## Dashboard Preview
-
-### Executive Operations Overview
-
-*Add screenshot here*
+This helps confirm that the Python analysis can also be checked using SQL.
 
 ---
 
-### Operational Diagnostics
+## Excel Validation
 
-*Add screenshot here*
+An Excel validation workbook was prepared to cross-check important KPIs and summary outputs.
 
----
+The Excel file includes:
 
-## Repository Structure
+* sample data
+* KPI summary
+* traffic summary
+* distance summary
+* peak-hour summary
+* vehicle summary
+* rating summary
+* notes on assumptions
 
-```text
-delivery-operations-analysis/
-│
-├── data/
-├── notebooks/
-├── sql/
-├── dashboard/
-├── visuals/
-├── README.md
-└── requirements.txt
-```
+This was added to show that the analysis was not only done in Python, but also validated in a simple business-friendly format.
 
 ---
 
-## Skills Demonstrated
+## Power BI Dashboard
 
-This project demonstrates practical skills in:
+A Power BI dashboard was prepared to present the final results visually.
 
-* Data Cleaning
-* Feature Engineering
-* Exploratory Data Analysis
-* SQL Analytics
-* Dashboard Design
-* Business Insight Generation
-* Operational Performance Analysis
+The dashboard focuses on:
 
----
+* total orders
+* average delivery time
+* slow-delivery rate
+* traffic-level performance
+* distance-based slow-delivery risk
+* vehicle and rating group performance
+* area-level filtering
 
-## What I Learned
-
-Through this project, I gained hands-on experience in:
-
-* Handling real-world timestamp inconsistencies
-* Designing business-oriented SQL queries
-* Translating analysis into operational recommendations
-* Building analytical dashboards for decision-making
+The dashboard is designed for simple operational monitoring rather than advanced forecasting.
 
 ---
 
-## Future Improvements
+## Project Limitations
 
-Potential enhancements include:
-
-* Predictive delay modeling
-* Route optimization simulation
-* Delivery SLA forecasting
-* Agent performance scoring models
+* The dataset does not include actual promised delivery time or SLA.
+* Slow delivery is based on a proxy threshold, not an official delay label.
+* Distance is calculated using straight-line Haversine distance, not road distance.
+* Pickup delay may have missing values because full pickup date information is not available.
+* Some vehicle groups have low record counts, so they should not be over-interpreted.
+* The baseline model is only used as a supporting check, not as the main objective.
 
 ---
 
-## Author
+## Final Outcome
 
-Built as part of my data analytics portfolio to demonstrate end-to-end analytical workflow using Python, SQL, and Power BI.
+This project shows practical data analyst skills using Python, SQL, Excel, and Power BI.
+
+It covers data cleaning, feature engineering, KPI creation, exploratory analysis, validation checks, dashboard preparation, and business recommendations.
+
+The project is designed to be realistic for a fresher-level Data Analyst or BI Analyst portfolio.
