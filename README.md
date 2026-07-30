@@ -221,22 +221,6 @@ This was added to show that the analysis was not only done in Python, but also v
 
 ---
 
-## Power BI Dashboard
-
-A Power BI dashboard was prepared to present the final results visually.
-
-The dashboard focuses on:
-
-* total orders
-* average delivery time
-* slow-delivery rate
-* traffic-level performance
-* distance-based slow-delivery risk
-* vehicle and rating group performance
-* area-level filtering
-
-The dashboard is designed for simple operational monitoring rather than advanced forecasting.
-
 ---
 
 ## Project Limitations
